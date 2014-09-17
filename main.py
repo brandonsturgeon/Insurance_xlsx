@@ -1,6 +1,7 @@
 # Used to format crop insurance data into a dynamically created spreadsheet
 
 import xlsxwriter
+import psycopg2
 
 
 # Converts Row,Col notation to LetterNum notation
@@ -200,6 +201,8 @@ class Create():
             r += 3
 
 if __name__ == "__main__":
+    doing_connections = True
+
     dic = {"policy_info":
                 {"Crop": "Corn",
                  "County": "Adair, IA",
@@ -226,8 +229,75 @@ if __name__ == "__main__":
                                                                 "Acres": 200,
                                                                 "Actual Production": 275000,
                                                                 "Actual Yield": 550}]}}}}
-    Create("test_file", dic)
 
+    if doing_connections:
 
+        # Lookups
+        market_symbols = {
+            "alfalfa": ["alfalfa"],
+            "cane": ["cane"],
+            "corn": ["corn_enogen", "corn_enogen_dryland", "corn_white",
+                     "corn_white_dryland", "corn_yellow", "corn_yellow_dryland"],
+            "corn_pink": ["corn_pink"],
+            "cotton": ["cotton"],
+            "oats": ["oats", "oats_dryland"],
+            "soybeans": ["soybeans", "soybean_dryland", "soybean_meal",
+                         "soybean_meal_dryland", "soybean_oil", "soybean_oil_dryland"],
+            "wheat": ["wheat", "wheat_dryland", "wheat_red",
+                      "wheat_red_dryland", "wheat_spring", "wheat_spring_dryland"]
+        }
 
+        # DB Connection
+        conn = psycopg2.connect("dbname=DB user=brandonsturgeon password=brandon1 host=localhost")
+        cur = conn.cursor()
 
+        # Creates object with policy info
+        policy_id = "24"
+        headers = ["id", "farm_id", "farm_crop_id", "units", "combined_market_symbol"]
+
+        # Converts headers list into a string to plug into a query
+        t_str = str(headers).replace("'", "").strip("[]")
+
+        # Query to get our policy dictionary
+        a = "SELECT " + t_str + " FROM insurances WHERE id = %s;"
+        cur.execute(a, (policy_id,))
+        policy = dict(zip(headers, cur.fetchone()))
+        print policy
+
+        # Generates the Array to be used in farm_crop query
+        m_symb = policy["combined_market_symbol"]
+        t_str = "ANY(ARRAY"
+        t_str += str(market_symbols[m_symb]).replace("\"", "'") + ")"
+        print t_str
+
+        # Gets the farm_crop IDs with same farm_id and market symbols
+        a = "SELECT DISTINCT farm_crops.id " \
+            "FROM farm_crops, crops " \
+            "WHERE crops.market_symbol = " + t_str + \
+            "AND farm_crops.crop_id = crops.id " \
+            "AND farm_crops.farm_id = %s;"
+        cur.execute(a, (policy["farm_id"],))
+        farm_crops = [x[0] for x in cur.fetchall()]
+
+        # Finds zones
+        t_str = "ANY(ARRAY["
+        t_str += str(farm_crops).strip("[]") + "])"
+        print t_str
+        a = "SELECT DISTINCT ON (zones.id) zones " \
+            "FROM insurances, farms, fields, zones " \
+            "WHERE insurances.id = %s " \
+            "AND farms.id = insurances.farm_id " \
+            "AND fields.farm_id = farms.id " \
+            "AND zones.field_id = fields.id " \
+            "AND zones.county_id = insurances.county_id " \
+            "AND zones.farm_crop_id = " + t_str + ";"
+        cur.execute(a, (policy_id,))
+        zones = cur.fetchall()
+        print len(zones)
+
+    else:
+        # Otherwise just use pre-created model
+        Create("test_file", dic)
+
+    #insurance county ID
+    #zones county ID
