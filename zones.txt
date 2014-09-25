@@ -1,0 +1,654 @@
+- :id: 24
+  :insured_crop_name: corn
+  :county_id: 24
+  :county_state_name: Dawson, NE
+  :units: optional
+  :mpci_coverage: 80
+  :practice: irrigated
+  :hpp_coverage: 120
+  :hpp_practice: irrigated
+  :harvest_price: *56
+  :spring_price: *57
+  :percent_of_spring_price: 100.0
+  :optional_and_enterprise_legal_descriptions:
+  - :section_township_range: 18 12N 25W
+    :zones:
+    - :zone_id: 1216
+      :zone_fsa_acres: 128.1
+      :zone_aph: 192.0
+      :zone_actual_production: 27541.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1240
+      :zone_fsa_acres: 53.64
+      :zone_aph: 192.0
+      :zone_actual_production: 10728.0
+      :zone_actual_yield: 200.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1243
+      :zone_fsa_acres: 123.5
+      :zone_aph: 192.0
+      :zone_actual_production: 26552.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 0.0
+    :total_acres: 305.24
+    :aph: 192.0
+    :mpci_yield_guarantee: 153.60000000000002
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 70963.20000000001
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 46884.86400000001
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 64822.0
+    :total_actual_yield: 212.364041410038
+  - :section_township_range: 26 11N 25W
+    :zones:
+    - :zone_id: 1219
+      :zone_fsa_acres: 214.0
+      :zone_aph: 200.0
+      :zone_actual_production: 34240.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1244
+      :zone_fsa_acres: 51.2
+      :zone_aph: 200.0
+      :zone_actual_production: 8192.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1245
+      :zone_fsa_acres: 3.0
+      :zone_aph: 160.0
+      :zone_actual_production: 300.0
+      :zone_actual_yield: 100.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1248
+      :zone_fsa_acres: 183.0
+      :zone_aph: 200.0
+      :zone_actual_production: 29280.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1217
+      :zone_fsa_acres: 70.0
+      :zone_aph: 200.0
+      :zone_actual_production: 11200.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 3099
+      :zone_fsa_acres: 147.0
+      :zone_aph: 200.0
+      :zone_actual_production: 23520.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    :total_acres: 668.2
+    :aph: 200.0
+    :mpci_yield_guarantee: 160.0
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 73920.0
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 106912.0
+    :mpci_bushel_loss_per_acre: 0.2693804250224616
+    :mpci_loss: !ruby/object:Money
+      fractional: 82856.8
+      currency: *1
+      bank: *2
+    :total_actual_production: 106732.0
+    :total_actual_yield: 159.73061957497754
+  - :section_township_range: 14 12N 25W
+    :zones:
+    - :zone_id: 1223
+      :zone_fsa_acres: 309.0
+      :zone_aph: 198.0
+      :zone_actual_production: 66435.0
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 5.3
+    - :zone_id: 3095
+      :zone_fsa_acres: 140.0
+      :zone_aph: 198.0
+      :zone_actual_production: 30100.0
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 5.3
+    :total_acres: 449.0
+    :aph: 198.0
+    :mpci_yield_guarantee: 158.4
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 73180.8
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 71121.6
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 96535.0
+    :total_actual_yield: 215.0
+  - :section_township_range: 13 12N 25W
+    :zones:
+    - :zone_id: 1226
+      :zone_fsa_acres: 154.5
+      :zone_aph: 194.0
+      :zone_actual_production: 33217.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 5.0
+    :total_acres: 154.5
+    :aph: 194.0
+    :mpci_yield_guarantee: 155.20000000000002
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 71702.40000000001
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 23978.4
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 33217.5
+    :total_actual_yield: 215.0
+  - :section_township_range: 19 12N 25W
+    :zones:
+    - :zone_id: 1229
+      :zone_fsa_acres: 73.85
+      :zone_aph: 177.0
+      :zone_actual_production: 14769.999999999998
+      :zone_actual_yield: 200.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1254
+      :zone_fsa_acres: 132.0
+      :zone_aph: 177.0
+      :zone_actual_production: 29040.0
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1277
+      :zone_fsa_acres: 280.88
+      :zone_aph: 177.0
+      :zone_actual_production: 61793.6
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 0.0
+    :total_acres: 486.73
+    :aph: 177.0
+    :mpci_yield_guarantee: 141.6
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 65419.2
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 68920.968
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 105603.6
+    :total_actual_yield: 216.9654633985988
+  - :section_township_range: 12 11N 25W
+    :zones:
+    - :zone_id: 1238
+      :zone_fsa_acres: 145.02
+      :zone_aph: 190.0
+      :zone_actual_production: 31179.300000000003
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 2.0
+    :total_acres: 145.02
+    :aph: 190.0
+    :mpci_yield_guarantee: 152.0
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 70224.0
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 22043.04
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 31179.300000000003
+    :total_actual_yield: 215.0
+  - :section_township_range: 30 12N 24W
+    :zones:
+    - :zone_id: 1265
+      :zone_fsa_acres: 137.6
+      :zone_aph: 198.0
+      :zone_actual_production: 28896.0
+      :zone_actual_yield: 210.0
+      :zone_loss_percent: 8.3
+    :total_acres: 137.6
+    :aph: 198.0
+    :mpci_yield_guarantee: 158.4
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 73180.8
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 21795.84
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 28896.0
+    :total_actual_yield: 210.0
+  - :section_township_range: 4 10N 25W
+    :zones:
+    - :zone_id: 1327
+      :zone_fsa_acres: 143.5
+      :zone_aph: 213.0
+      :zone_actual_production: 29417.5
+      :zone_actual_yield: 205.0
+      :zone_loss_percent: 19.0
+    :total_acres: 143.5
+    :aph: 213.0
+    :mpci_yield_guarantee: 170.4
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 78724.8
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 24452.4
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 29417.5
+    :total_actual_yield: 205.0
+  - :section_township_range: 31 12N 25W
+    :zones:
+    - :zone_id: 1255
+      :zone_fsa_acres: 134.5
+      :zone_aph: 200.0
+      :zone_actual_production: 29590.0
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 0.0
+    :total_acres: 134.5
+    :aph: 200.0
+    :mpci_yield_guarantee: 160.0
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 73920.0
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 21520.0
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 29590.0
+    :total_actual_yield: 220.0
+  - :section_township_range: 28 11N 25W
+    :zones:
+    - :zone_id: 1252
+      :zone_fsa_acres: 147.2
+      :zone_aph: 216.0
+      :zone_actual_production: 32383.999999999996
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 13.7
+    :total_acres: 147.2
+    :aph: 216.0
+    :mpci_yield_guarantee: 172.8
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 79833.60000000001
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 25436.16
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 32383.999999999996
+    :total_actual_yield: 220.0
+  - :section_township_range: 1 11N 25W
+    :zones:
+    - :zone_id: 3104
+      :zone_fsa_acres: 82.6
+      :zone_aph: 197.0
+      :zone_actual_production: 17759.0
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 2.0
+    - :zone_id: 3105
+      :zone_fsa_acres: 1.5
+      :zone_aph: 197.0
+      :zone_actual_production: 322.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 0.0
+    :total_acres: 84.1
+    :aph: 197.0
+    :mpci_yield_guarantee: 157.60000000000002
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 72811.20000000001
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 13254.160000000002
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 18081.5
+    :total_actual_yield: 215.00000000000003
+  - :section_township_range: 11 11N 25W
+    :zones:
+    - :zone_id: 3113
+      :zone_fsa_acres: 35.0
+      :zone_aph: 199.0
+      :zone_actual_production: 7000.0
+      :zone_actual_yield: 200.0
+      :zone_loss_percent: 8.3
+    :total_acres: 35.0
+    :aph: 199.0
+    :mpci_yield_guarantee: 159.20000000000002
+    :multi_guarantee_per_acre: !ruby/object:Money
+      fractional: 73550.40000000001
+      currency: *1
+      bank: *2
+    :total_bushel_guarantee: 5572.000000000001
+    :mpci_bushel_loss_per_acre: 0
+    :mpci_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 7000.0
+    :total_actual_yield: 200.0
+  :hpp_legal_descriptions:
+  - :section_township_range: 18 12N 25W
+    :zones:
+    - :zone_id: 1216
+      :zone_fsa_acres: 128.1
+      :zone_aph: 192.0
+      :zone_actual_production: 27541.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1240
+      :zone_fsa_acres: 53.64
+      :zone_aph: 192.0
+      :zone_actual_production: 10728.0
+      :zone_actual_yield: 200.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1243
+      :zone_fsa_acres: 123.5
+      :zone_aph: 192.0
+      :zone_actual_production: 26552.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 0.0
+    :total_acres: 305.24
+    :modified_aph: 230.4
+    :mpci_yield_guarantee: 153.60000000000002
+    :covered_bushels: 76.8
+    :hpp_guarantee_per_acre: 354.816
+    :loss_percent: 0.0
+    :potential_bushel_loss: 0.0
+    :potential_dollar_loss: 0.0
+    :actual_dollar_loss: 0.0
+    :total_actual_production: 64822.0
+    :total_actual_yield: 212.364041410038
+  - :section_township_range: 26 11N 25W
+    :zones:
+    - :zone_id: 1219
+      :zone_fsa_acres: 214.0
+      :zone_aph: 200.0
+      :zone_actual_production: 34240.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1244
+      :zone_fsa_acres: 51.2
+      :zone_aph: 200.0
+      :zone_actual_production: 8192.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1245
+      :zone_fsa_acres: 3.0
+      :zone_aph: 160.0
+      :zone_actual_production: 300.0
+      :zone_actual_yield: 100.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1248
+      :zone_fsa_acres: 183.0
+      :zone_aph: 200.0
+      :zone_actual_production: 29280.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 1217
+      :zone_fsa_acres: 70.0
+      :zone_aph: 200.0
+      :zone_actual_production: 11200.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    - :zone_id: 3099
+      :zone_fsa_acres: 147.0
+      :zone_aph: 200.0
+      :zone_actual_production: 23520.0
+      :zone_actual_yield: 160.0
+      :zone_loss_percent: 33.3
+    :total_acres: 668.2
+    :modified_aph: 240.0
+    :mpci_yield_guarantee: 160.0
+    :covered_bushels: 80.0
+    :hpp_guarantee_per_acre: 369.6
+    :loss_percent: 0.33299999999999996
+    :potential_bushel_loss: 79.91999999999999
+    :potential_dollar_loss: 246719.75328
+    :actual_dollar_loss: 246719.75328
+    :total_actual_production: 106732.0
+    :total_actual_yield: 159.73061957497754
+  - :section_township_range: 14 12N 25W
+    :zones:
+    - :zone_id: 1223
+      :zone_fsa_acres: 309.0
+      :zone_aph: 198.0
+      :zone_actual_production: 66435.0
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 5.3
+    - :zone_id: 3095
+      :zone_fsa_acres: 140.0
+      :zone_aph: 198.0
+      :zone_actual_production: 30100.0
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 5.3
+    :total_acres: 449.0
+    :modified_aph: 237.6
+    :mpci_yield_guarantee: 158.4
+    :covered_bushels: 79.2
+    :hpp_guarantee_per_acre: 365.904
+    :loss_percent: 0.053
+    :potential_bushel_loss: 12.592799999999999
+    :potential_dollar_loss: 26122.252463999997
+    :actual_dollar_loss: 26122.252463999997
+    :total_actual_production: 96535.0
+    :total_actual_yield: 215.0
+  - :section_township_range: 13 12N 25W
+    :zones:
+    - :zone_id: 1226
+      :zone_fsa_acres: 154.5
+      :zone_aph: 194.0
+      :zone_actual_production: 33217.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 5.0
+    :total_acres: 154.5
+    :modified_aph: 232.8
+    :mpci_yield_guarantee: 155.20000000000002
+    :covered_bushels: 77.6
+    :hpp_guarantee_per_acre: 358.512
+    :loss_percent: 0.05
+    :potential_bushel_loss: 11.64
+    :potential_dollar_loss: 8308.5156
+    :actual_dollar_loss: 8308.5156
+    :total_actual_production: 33217.5
+    :total_actual_yield: 215.0
+  - :section_township_range: 19 12N 25W
+    :zones:
+    - :zone_id: 1229
+      :zone_fsa_acres: 73.85
+      :zone_aph: 177.0
+      :zone_actual_production: 14769.999999999998
+      :zone_actual_yield: 200.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1254
+      :zone_fsa_acres: 132.0
+      :zone_aph: 177.0
+      :zone_actual_production: 29040.0
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 0.0
+    - :zone_id: 1277
+      :zone_fsa_acres: 280.88
+      :zone_aph: 177.0
+      :zone_actual_production: 61793.6
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 0.0
+    :total_acres: 486.73
+    :modified_aph: 212.4
+    :mpci_yield_guarantee: 141.6
+    :covered_bushels: 70.8
+    :hpp_guarantee_per_acre: 327.096
+    :loss_percent: 0.0
+    :potential_bushel_loss: 0.0
+    :potential_dollar_loss: 0.0
+    :actual_dollar_loss: !ruby/object:Money
+      fractional: 0.0
+      currency: *1
+      bank: *2
+    :total_actual_production: 105603.6
+    :total_actual_yield: 216.9654633985988
+  - :section_township_range: 12 11N 25W
+    :zones:
+    - :zone_id: 1238
+      :zone_fsa_acres: 145.02
+      :zone_aph: 190.0
+      :zone_actual_production: 31179.300000000003
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 2.0
+    :total_acres: 145.02
+    :modified_aph: 228.0
+    :mpci_yield_guarantee: 152.0
+    :covered_bushels: 76.0
+    :hpp_guarantee_per_acre: 351.12
+    :loss_percent: 0.02
+    :potential_bushel_loss: 4.5600000000000005
+    :potential_dollar_loss: 3055.165344000001
+    :actual_dollar_loss: 3055.165344000001
+    :total_actual_production: 31179.300000000003
+    :total_actual_yield: 215.0
+  - :section_township_range: 30 12N 24W
+    :zones:
+    - :zone_id: 1265
+      :zone_fsa_acres: 137.6
+      :zone_aph: 198.0
+      :zone_actual_production: 28896.0
+      :zone_actual_yield: 210.0
+      :zone_loss_percent: 8.3
+    :total_acres: 137.6
+    :modified_aph: 237.6
+    :mpci_yield_guarantee: 158.4
+    :covered_bushels: 79.2
+    :hpp_guarantee_per_acre: 365.904
+    :loss_percent: 0.083
+    :potential_bushel_loss: 19.7208
+    :potential_dollar_loss: 12536.749209599999
+    :actual_dollar_loss: 12536.749209599999
+    :total_actual_production: 28896.0
+    :total_actual_yield: 210.0
+  - :section_township_range: 4 10N 25W
+    :zones:
+    - :zone_id: 1327
+      :zone_fsa_acres: 143.5
+      :zone_aph: 213.0
+      :zone_actual_production: 29417.5
+      :zone_actual_yield: 205.0
+      :zone_loss_percent: 19.0
+    :total_acres: 143.5
+    :modified_aph: 255.6
+    :mpci_yield_guarantee: 170.4
+    :covered_bushels: 85.2
+    :hpp_guarantee_per_acre: 393.624
+    :loss_percent: 0.19
+    :potential_bushel_loss: 48.564
+    :potential_dollar_loss: 32196.47508
+    :actual_dollar_loss: 32196.47508
+    :total_actual_production: 29417.5
+    :total_actual_yield: 205.0
+  - :section_township_range: 31 12N 25W
+    :zones:
+    - :zone_id: 1255
+      :zone_fsa_acres: 134.5
+      :zone_aph: 200.0
+      :zone_actual_production: 29590.0
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 0.0
+    :total_acres: 134.5
+    :modified_aph: 240.0
+    :mpci_yield_guarantee: 160.0
+    :covered_bushels: 80.0
+    :hpp_guarantee_per_acre: 369.6
+    :loss_percent: 0.0
+    :potential_bushel_loss: 0.0
+    :potential_dollar_loss: 0.0
+    :actual_dollar_loss: 0.0
+    :total_actual_production: 29590.0
+    :total_actual_yield: 220.0
+  - :section_township_range: 28 11N 25W
+    :zones:
+    - :zone_id: 1252
+      :zone_fsa_acres: 147.2
+      :zone_aph: 216.0
+      :zone_actual_production: 32383.999999999996
+      :zone_actual_yield: 220.0
+      :zone_loss_percent: 13.7
+    :total_acres: 147.2
+    :modified_aph: 259.2
+    :mpci_yield_guarantee: 172.8
+    :covered_bushels: 86.4
+    :hpp_guarantee_per_acre: 399.16800000000006
+    :loss_percent: 0.13699999999999998
+    :potential_bushel_loss: 35.5104
+    :potential_dollar_loss: 24149.344665599994
+    :actual_dollar_loss: 24149.344665599994
+    :total_actual_production: 32383.999999999996
+    :total_actual_yield: 220.0
+  - :section_township_range: 1 11N 25W
+    :zones:
+    - :zone_id: 3104
+      :zone_fsa_acres: 82.6
+      :zone_aph: 197.0
+      :zone_actual_production: 17759.0
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 2.0
+    - :zone_id: 3105
+      :zone_fsa_acres: 1.5
+      :zone_aph: 197.0
+      :zone_actual_production: 322.5
+      :zone_actual_yield: 215.0
+      :zone_loss_percent: 0.0
+    :total_acres: 84.1
+    :modified_aph: 236.4
+    :mpci_yield_guarantee: 157.60000000000002
+    :covered_bushels: 78.8
+    :hpp_guarantee_per_acre: 364.056
+    :loss_percent: 0.02
+    :potential_bushel_loss: 4.728000000000001
+    :potential_dollar_loss: 1837.0265760000002
+    :actual_dollar_loss: 1837.0265760000002
+    :total_actual_production: 18081.5
+    :total_actual_yield: 215.00000000000003
+  - :section_township_range: 11 11N 25W
+    :zones:
+    - :zone_id: 3113
+      :zone_fsa_acres: 35.0
+      :zone_aph: 199.0
+      :zone_actual_production: 7000.0
+      :zone_actual_yield: 200.0
+      :zone_loss_percent: 8.3
+    :total_acres: 35.0
+    :modified_aph: 238.8
+    :mpci_yield_guarantee: 159.20000000000002
+    :covered_bushels: 79.6
+    :hpp_guarantee_per_acre: 367.752
+    :loss_percent: 0.083
+    :potential_bushel_loss: 19.820400000000003
+    :potential_dollar_loss: 3204.9586800000006
+    :actual_dollar_loss: 3204.9586800000006
+    :total_actual_production: 7000.0
+    :total_actual_yield: 200.0
+  :enterprise_summary:

@@ -2,6 +2,7 @@
 
 import xlsxwriter
 import psycopg2
+import re
 
 
 # Converts Row,Col notation to LetterNum notation
@@ -112,8 +113,8 @@ class Create():
 
             # ! This will have to change, because dictionaries aren't ordered, which means .keys() won't be ! #
             # Sets our headers for the zone data
-            headers = unit["zones"][0].keys()
-            page.write_row(r+4, 2, headers, self.format_01)
+            z_headers = unit["zones"][0].keys()
+            page.write_row(r+4, 2, z_headers, self.format_01)
             r += 5
 
             # Writes the data for each zone in the unit
@@ -146,8 +147,8 @@ class Create():
             page.write_row(r+2, 1, unit["gen"].values())
 
             # Sets the headers for our zone columns
-            headers = unit["zones"][0].keys()
-            page.write_row(r+3, 3, headers, self.format_01)
+            z_headers = unit["zones"][0].keys()
+            page.write_row(r+3, 3, z_headers, self.format_01)
 
             r += 5
             # Creates the table by just writing each zone's values as a list
@@ -184,8 +185,8 @@ class Create():
             page.write_row(r+2, 1, unit["gen"].values())
 
             # Sets the headers for our zone columns
-            headers = unit["zones"][0].keys()
-            page.write_row(r+4, 1, headers, self.format_01)
+            z_headers = unit["zones"][0].keys()
+            page.write_row(r+4, 1, z_headers, self.format_01)
 
             r += 5
             # Creates the table by just writing each zone's values as a list
@@ -204,31 +205,30 @@ if __name__ == "__main__":
     doing_connections = True
 
     dic = {"policy_info":
-                {"Crop": "Corn",
-                 "County": "Adair, IA",
-                 "Units": "optional",
-                 "MPCI Coverage": "60%",
-                 "Practice": "non_irrigated"},
-            "enterprise_units": {"gen": {"Total": 493, "Total2": 86700, "Total3": 19720},
-                                 "units": {"unit1": {"gen": {"totalacres": 10,
-                                                             "total2": 70,
-                                                             "total3": 32},
-                                                     "zones": [{"Field-Zone": "zone1",
-                                                                "Acres": 200,
-                                                                "Actual Production": 275000,
-                                                                "Actual Yield": 550}]},
-                                           "unit2": {"gen": {"totalacres": 20,
-                                                             "total2": 50,
-                                                             "total3": 75},
-                                                     "zones": [{"Field-Zone": "zone1",
-                                                                "Acres": 200,
-                                                                "Actual Production": 275000,
-                                                                "Actual Yield": 550}]}}},
-            "hpp_units": {"units": {"unit1": {"gen": {"total acre": 720, "modified APH": 550},
-                                              "zones": [{"Field-Zone": "zone1",
-                                                                "Acres": 200,
-                                                                "Actual Production": 275000,
-                                                                "Actual Yield": 550}]}}}}
+          {"Crop": "Corn",
+           "County": "Adair, IA",
+           "Units": "optional",
+           "MPCI Coverage": "60%",
+           "Practice": "non_irrigated"},
+
+           "enterprise_units":
+           {"gen": {"Total": 493, "Total2": 86700, "Total3": 19720},
+            "units": {"unit1": {"gen": {"total_acres": 10, "total2": 70, "total3": 32},
+                                "zones": [{"Field-Zone": "zone1",
+                                           "Acres": 200,
+                                           "Actual Production": 275000,
+                                           "Actual Yield": 550}]},
+                      "unit2": {"gen": {"total_acres": 20, "total2": 50, "total3": 75},
+                                "zones": [{"Field-Zone": "zone1",
+                                           "Acres": 200,
+                                           "Actual Production": 275000,
+                                           "Actual Yield": 550}]}}},
+           "hpp_units":
+           {"units": {"unit1": {"gen": {"total acre": 720, "modified APH": 550},
+                                "zones": [{"Field-Zone": "zone1",
+                                           "Acres": 200,
+                                           "Actual Production": 275000,
+                                           "Actual Yield": 550}]}}}}
 
     if doing_connections:
 
@@ -251,9 +251,17 @@ if __name__ == "__main__":
         conn = psycopg2.connect("dbname=DB user=brandonsturgeon password=brandon1 host=localhost")
         cur = conn.cursor()
 
+        data_set = {"policy_info":
+                    {"Crop": "Corn",
+                     "County": "Adair, IA",
+                     "Units": "optional",
+                     "MPCI Coverage": "60%",
+                     "Practice": "non_irrigated"}}
+
         # Creates object with policy info
         policy_id = "24"
-        headers = ["id", "farm_id", "farm_crop_id", "units", "combined_market_symbol"]
+        headers = ["id", "farm_id", "farm_crop_id", "units",
+                   "combined_market_symbol", "hpp_coverage", "units", "county_id", "practice", "hpp_practice"]
 
         # Converts headers list into a string to plug into a query
         t_str = str(headers).replace("'", "").strip("[]")
@@ -262,13 +270,28 @@ if __name__ == "__main__":
         a = "SELECT " + t_str + " FROM insurances WHERE id = %s;"
         cur.execute(a, (policy_id,))
         policy = dict(zip(headers, cur.fetchone()))
-        print policy
 
-        # Generates the Array to be used in farm_crop query
+        # Setting words to be the same as what we use for zones
+        for k, v in policy.iteritems():
+            if v == "irrigated":
+                policy[k] = True
+            elif v == "non irrigated":
+                policy[k] = False
+        print "Policy: " + str(policy_id) + " " + str(policy)
+
+        # Puts HPP coverage shell into the data set if our policy has HPP
+        # policy["hpp_coverage"] is either an integer if it exists, or None if it doesn't
+        if policy["hpp_coverage"] is not None:
+            data_set["hpp_units"] = {"units": {}}
+
+        # Puts either enterprise_units or optional_units shell into data set
+        data_set[policy["units"]+"_units"] = {"units": {}}
+
+        # Generates the crop name Array to be used in farm_crop query
         m_symb = policy["combined_market_symbol"]
         t_str = "ANY(ARRAY"
         t_str += str(market_symbols[m_symb]).replace("\"", "'") + ")"
-        print t_str
+        print "Crop Names: " + t_str
 
         # Gets the farm_crop IDs with same farm_id and market symbols
         a = "SELECT DISTINCT farm_crops.id " \
@@ -282,18 +305,70 @@ if __name__ == "__main__":
         # Finds zones
         t_str = "ANY(ARRAY["
         t_str += str(farm_crops).strip("[]") + "])"
-        print t_str
-        a = "SELECT DISTINCT ON (zones.id) zones " \
-            "FROM insurances, farms, fields, zones " \
-            "WHERE insurances.id = %s " \
-            "AND farms.id = insurances.farm_id " \
-            "AND fields.farm_id = farms.id " \
-            "AND zones.field_id = fields.id " \
-            "AND zones.county_id = insurances.county_id " \
-            "AND zones.farm_crop_id = " + t_str + ";"
-        cur.execute(a, (policy_id,))
-        zones = cur.fetchall()
-        print len(zones)
+        print "Farm Crop IDs: " + t_str
+
+        hpp = "SELECT DISTINCT zones.id " \
+              "FROM insurances, farms, fields, zones " \
+              "WHERE insurances.id = %s " \
+              "AND farms.id = insurances.farm_id " \
+              "AND fields.farm_id = farms.id " \
+              "AND zones.field_id = fields.id " \
+              "AND zones.county_id = insurances.county_id " \
+              "AND zones.irrigated = " + str(policy["hpp_practice"]) + " " \
+              "AND zones.farm_crop_id = " + t_str + ";"
+        cur.execute(hpp, (policy_id,))
+        hpp_zones = [x[0] for x in cur.fetchall()]
+
+        optional = "SELECT DISTINCT zones.id " \
+                   "FROM insurances, farms, fields, zones " \
+                   "WHERE insurances.id = %s " \
+                   "AND farms.id = insurances.farm_id " \
+                   "AND fields.farm_id = farms.id " \
+                   "AND zones.field_id = fields.id " \
+                   "AND zones.county_id = insurances.county_id " \
+                   "AND zones.irrigated = " + str(policy["practice"]) + " " \
+                   "AND zones.farm_crop_id = " + t_str + ";"
+        cur.execute(optional, (policy_id,))
+        optional_zones = [x[0] for x in cur.fetchall()]
+
+        enterprise = "SELECT DISTINCT zones.id " \
+                     "FROM insurances, farms, fields, zones " \
+                     "WHERE insurances.id = %s " \
+                     "AND farms.id = insurances.farm_id " \
+                     "AND fields.farm_id = farms.id " \
+                     "AND zones.field_id = fields.id " \
+                     "AND zones.county_id = insurances.county_id " \
+                     "AND zones.farm_crop_id = " + t_str + ";"
+        cur.execute(enterprise, (policy_id,))
+        enterprise_zones = [x[0] for x in cur.fetchall()]
+
+        print "Hpp Zones: " + str(hpp_zones)
+        print "Optional Zones: " + str(optional_zones)
+        print "Enterprise Zones: " + str(enterprise_zones)
+
+        hpp = "SELECT (zones.section, zones.township, zones.range), array_to_string(array_agg(zones.id), ',') " \
+              "FROM zones " \
+              "WHERE zones.id = ANY(ARRAY" + str(hpp_zones) + ") " \
+              "GROUP BY (zones.section, zones.township, zones.range);"
+        cur.execute(hpp)
+        hpp_legals = cur.fetchall()
+
+        units = {}
+        for u in hpp_legals:
+            units[u[0]] = {"gen": {}, "zones": [int(x) for x in u[1].split(",")]}
+
+            new_l = []
+            for x in units[u[0]]["zones"]:
+                a = "SELECT fields.name, zones.name " \
+                    "FROM fields, zones " \
+                    "WHERE zones.id = " + str(x) + " " \
+                    "AND zones.field_id = fields.id;"
+                cur.execute(a)
+                result = cur.fetchone()
+                name_key = result[0] + "-" + result[1]
+                new_l.append({"Field-Zone": name_key})
+            units[u[0]]["zones"] = new_l
+        print units
 
     else:
         # Otherwise just use pre-created model
