@@ -201,38 +201,14 @@ class Create():
                 page.write_formula(r, c, "=SUM("+_range+")", self.unlocked)
             r += 3
 
-if __name__ == "__main__":
-    doing_connections = True
 
-    dic = {"policy_info":
-          {"Crop": "Corn",
-           "County": "Adair, IA",
-           "Units": "optional",
-           "MPCI Coverage": "60%",
-           "Practice": "non_irrigated"},
+class Generate():
+    def __init__(self):
+        self.dictionary = {}
+        self.main()
 
-           "enterprise_units":
-           {"gen": {"Total": 493, "Total2": 86700, "Total3": 19720},
-            "units": {"unit1": {"gen": {"total_acres": 10, "total2": 70, "total3": 32},
-                                "zones": [{"Field-Zone": "zone1",
-                                           "Acres": 200,
-                                           "Actual Production": 275000,
-                                           "Actual Yield": 550}]},
-                      "unit2": {"gen": {"total_acres": 20, "total2": 50, "total3": 75},
-                                "zones": [{"Field-Zone": "zone1",
-                                           "Acres": 200,
-                                           "Actual Production": 275000,
-                                           "Actual Yield": 550}]}}},
-           "hpp_units":
-           {"units": {"unit1": {"gen": {"total acre": 720, "modified APH": 550},
-                                "zones": [{"Field-Zone": "zone1",
-                                           "Acres": 200,
-                                           "Actual Production": 275000,
-                                           "Actual Yield": 550}]}}}}
-
-    if doing_connections:
-
-        # Lookups
+    def main(self):
+#        Lookups
         market_symbols = {
             "alfalfa": ["alfalfa"],
             "cane": ["cane"],
@@ -261,7 +237,9 @@ if __name__ == "__main__":
         # Creates object with policy info
         policy_id = "24"
         headers = ["id", "farm_id", "farm_crop_id", "units",
-                   "combined_market_symbol", "hpp_coverage", "units", "county_id", "practice", "hpp_practice"]
+                   "combined_market_symbol", "hpp_coverage",
+                   "units", "county_id", "practice", "hpp_practice", "mpci_coverage",
+                   "percent_of_spring_price"]
 
         # Converts headers list into a string to plug into a query
         t_str = str(headers).replace("'", "").strip("[]")
@@ -277,7 +255,7 @@ if __name__ == "__main__":
                 policy[k] = True
             elif v == "non irrigated":
                 policy[k] = False
-        print "Policy: " + str(policy_id) + " " + str(policy)
+        #print "Policy: " + str(policy_id) + " " + str(policy)
 
         # Puts HPP coverage shell into the data set if our policy has HPP
         # policy["hpp_coverage"] is either an integer if it exists, or None if it doesn't
@@ -285,13 +263,15 @@ if __name__ == "__main__":
             data_set["hpp_units"] = {"units": {}}
 
         # Puts either enterprise_units or optional_units shell into data set
-        data_set[policy["units"]+"_units"] = {"units": {}}
+        #data_set[policy["units"]+"_units"] = {"units": {}}
+        data_set["enterprise_units"] = {"units": {}}
+        data_set["optional_units"] = {"units": {}}
 
         # Generates the crop name Array to be used in farm_crop query
         m_symb = policy["combined_market_symbol"]
         t_str = "ANY(ARRAY"
         t_str += str(market_symbols[m_symb]).replace("\"", "'") + ")"
-        print "Crop Names: " + t_str
+       # print "Crop Names: " + t_str
 
         # Gets the farm_crop IDs with same farm_id and market symbols
         a = "SELECT DISTINCT farm_crops.id " \
@@ -305,7 +285,7 @@ if __name__ == "__main__":
         # Finds zones
         t_str = "ANY(ARRAY["
         t_str += str(farm_crops).strip("[]") + "])"
-        print "Farm Crop IDs: " + t_str
+        #print "Farm Crop IDs: " + t_str
 
         hpp = "SELECT DISTINCT zones.id " \
               "FROM insurances, farms, fields, zones " \
@@ -342,37 +322,156 @@ if __name__ == "__main__":
         cur.execute(enterprise, (policy_id,))
         enterprise_zones = [x[0] for x in cur.fetchall()]
 
-        print "Hpp Zones: " + str(hpp_zones)
-        print "Optional Zones: " + str(optional_zones)
-        print "Enterprise Zones: " + str(enterprise_zones)
+        # General information for each legal unit
+        unit_gens = {"hpp_units": ["total_acres", "modified_aph", "mcpi_yield_guarantee",
+                                   "covered_bushels", "guarantee/acre", "loss%",
+                                   "potential_bushel_loss", "potential_$_loss", "actual_$_loss"],
+                     "optional_units": ["total_acres", "APH", "yield_guarantee",
+                                        "guarantee/acre", "total_bu_guarantee", "mcpi_bu_loss/acre", "mcpi_loss"],
+                     "enterprise_units": ["total_acres", "APH", "yield_guarantee",
+                                          "guarantee/acre", "total_bu_guarantee", "mcpi_bu_loss/acre", "mcpi_loss"]}
 
-        hpp = "SELECT (zones.section, zones.township, zones.range), array_to_string(array_agg(zones.id), ',') " \
-              "FROM zones " \
-              "WHERE zones.id = ANY(ARRAY" + str(hpp_zones) + ") " \
-              "GROUP BY (zones.section, zones.township, zones.range);"
-        cur.execute(hpp)
-        hpp_legals = cur.fetchall()
+        check_l = [(hpp_zones, "hpp_units"), (enterprise_zones, "enterprise_units"), (optional_zones, "optional_units")]
+        for page in check_l:
+            print page
+            a = "SELECT (zones.section, zones.township, zones.range), array_to_string(array_agg(zones.id), ',') " \
+                "FROM zones " \
+                "WHERE zones.id = ANY(ARRAY[" + str(page[0]) + "]) " \
+                "GROUP BY (zones.section, zones.township, zones.range);"
+            cur.execute(a)
+            legals = cur.fetchall()
 
-        units = {}
-        for u in hpp_legals:
-            units[u[0]] = {"gen": {}, "zones": [int(x) for x in u[1].split(",")]}
+            # Generates the units (legal definitions) for this sheet
+            units = {}
 
-            new_l = []
-            for x in units[u[0]]["zones"]:
-                a = "SELECT fields.name, zones.name " \
-                    "FROM fields, zones " \
-                    "WHERE zones.id = " + str(x) + " " \
-                    "AND zones.field_id = fields.id;"
-                cur.execute(a)
-                result = cur.fetchone()
-                name_key = result[0] + "-" + result[1]
-                new_l.append({"Field-Zone": name_key})
-            units[u[0]]["zones"] = new_l
-        print units
+            for u in legals:
+                total_acres = 0
+                actual_production_total = 0
+                # Turns the string of (Int, North/South, East/West) into a proper legal name
+                legal_name = u[0].strip("()").split(",")
+                name = "Unit - " + str(legal_name[0]) + " " + str(legal_name[1]) + " " + str(legal_name[2])
 
+                # Gets the general info for this section from unit_gens, and then sets them all to 0 in a dictionary
+                unit_gen = unit_gens[page[1]]
+                gens = dict(zip(unit_gen, [0 for x in range(len(unit_gen))]))
+                units[name] = {"gen": gens, "zones": [int(x) for x in u[1].split(",")]}
+
+                new_l = []
+                for k, x in enumerate(units[name]["zones"]):
+                    a = "SELECT fields.name, zones.name, zones.acres, " \
+                        "zones.yield_goal, zones.fsa_acres, zones.loss_percent, zones.aph, zones.id " \
+                        "FROM fields, zones " \
+                        "WHERE zones.id = " + str(x) + " " \
+                        "AND zones.field_id = fields.id;"
+                    cur.execute(a)
+                    result = cur.fetchone()
+                    name_key = result[0] + "-" + result[1]
+
+                    # Math Stuff
+                    # Actual Yield = Yield_goal - (yield_goal * loss_percent)
+                    actual_yield = result[3] - (result[3] * (result[5]/100))
+
+                    # Actual Production = actual_yield * fsa_acres
+                    actual_production = actual_yield * result[4]
+
+                    new_l.append({"Field-Zone": name_key,
+                                  "Acres": result[2],
+                                  "Actual Production": actual_production,
+                                  "Actual Yield": actual_yield})
+                    total_acres += int(result[2])
+                    actual_production_total += actual_production
+
+                gen_dict = units[name]["gen"]
+                gen_dict["total_acres"] = total_acres
+                gen_dict["mpci_yield_guarantee"] = result[6] * (policy["mpci_coverage"] / 100)
+
+                q = "SELECT farm_crops.harvest_price_cents, farm_crops.spring_price_cents " \
+                    "FROM zones,farm_crops " \
+                    "WHERE zones.id = " + str(result[7]) + " " \
+                    "AND farm_crops.id = zones.farm_crop_id;"
+                cur.execute(q)
+                res = cur.fetchone()
+                harvest_price = res[0]
+                spring_price = res[1]
+
+                # If we're working with Optional or Enterprise
+                if page[1] != "hpp_units":
+                    gen_dict["aph"] = result[6]
+                    gen_dict["guarantee/acre"] = spring_price * gen_dict["mpci_yield_guarantee"]
+                    gen_dict["total_bu_guarantee"] = gen_dict["mpci_yield_guarantee"] * total_acres
+
+                    if harvest_price < spring_price:
+                        a = gen_dict["guarantee/acre"] / harvest_price
+                    else:
+                        a = gen_dict["mpci_yield_guarantee"]
+                    trigger_yield = a
+
+                    gen_dict["MPCI_bu_loss/acre"] = trigger_yield - (actual_production_total / total_acres)
+                    gen_dict["MPCI_loss"] = harvest_price * gen_dict["MPCI_bu_loss/acre"] * total_acres
+
+                # If we're working with HPP
+                else:
+                    percent_spring_price = spring_price * (policy["percent_of_spring_price"] / 100)
+
+                    gen_dict["modified_aph"] = result[6] * (policy["hpp_coverage"] / 100)
+                    gen_dict["covered_bushels"] = gen_dict["modified_aph"] - result[6] * (policy["mpci_coverage"] / 100)
+                    gen_dict["guarantee/acre"] = percent_spring_price * gen_dict["covered_bushels"]
+                    gen_dict["loss%"] = result[5] / 100
+
+                    total_bushel_loss = gen_dict["modified_aph"] * gen_dict["loss%"]
+                    if gen_dict["covered_bushels"] > total_bushel_loss:
+                        gen_dict["potential_bushel_loss"] = total_bushel_loss
+                    else:
+                        gen_dict["potential_bushel_loss"] = gen_dict["covered_bushels"]
+
+                    a = percent_spring_price * gen_dict["potential_bushel_loss"] * gen_dict["total_acres"]
+                    gen_dict["potential_$_loss"] = a
+
+                    total_actual_yield = actual_production_total / total_acres
+                    if total_actual_yield > gen_dict["modified_aph"] - gen_dict["potential_bushel_loss"]:
+                        if gen_dict["modified_aph"] - total_actual_yield < gen_dict["potential_bushel_loss"]:
+                            a = percent_spring_price * (gen_dict["modified_aph"] - total_actual_yield) * total_acres
+                        else:
+                            a = percent_spring_price * gen_dict["potential_bushel_loss"] * total_acres
+                    else:
+                        a = gen_dict["potential_$_loss"]
+                    gen_dict["actual_$_loss"] = a
+
+                # Adds the list of zones for this unit
+                units[name]["zones"] = new_l
+            data_set[page[1]]["units"] = units
+        self.dictionary = data_set
+
+if __name__ == "__main__":
+    doing_connections = True
+
+    dic = {"policy_info":
+          {"Crop": "Corn",
+           "County": "Adair, IA",
+           "Units": "optional",
+           "MPCI Coverage": "60%",
+           "Practice": "non_irrigated"},
+
+           "enterprise_units":
+           {"gen": {"Total": 493, "Total2": 86700, "Total3": 19720},
+            "units": {"unit1": {"gen": {"total_acres": 10, "total2": 70, "total3": 32},
+                                "zones": [{"Field-Zone": "zone1",
+                                           "Acres": 200,
+                                           "Actual Production": 275000,
+                                           "Actual Yield": 550}]},
+                      "unit2": {"gen": {"total_acres": 20, "total2": 50, "total3": 75},
+                                "zones": [{"Field-Zone": "zone1",
+                                           "Acres": 200,
+                                           "Actual Production": 275000,
+                                           "Actual Yield": 550}]}}},
+           "hpp_units":
+           {"units": {"unit1": {"gen": {"total acre": 720, "modified APH": 550},
+                                "zones": [{"Field-Zone": "zone1",
+                                           "Acres": 200,
+                                           "Actual Production": 275000,
+                                           "Actual Yield": 550}]}}}}
+
+    if doing_connections:
+        Create("test_file2", Generate().dictionary)
     else:
-        # Otherwise just use pre-created model
         Create("test_file", dic)
-
-    #insurance county ID
-    #zones county ID
