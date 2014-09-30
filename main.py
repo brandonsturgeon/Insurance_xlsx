@@ -2,7 +2,6 @@
 
 import xlsxwriter
 import psycopg2
-import re
 
 
 # Converts Row,Col notation to LetterNum notation
@@ -259,13 +258,16 @@ class Generate():
 
         # Puts HPP coverage shell into the data set if our policy has HPP
         # policy["hpp_coverage"] is either an integer if it exists, or None if it doesn't
+        usable_units = []
         if policy["hpp_coverage"] is not None:
             data_set["hpp_units"] = {"units": {}}
+            usable_units.append("hpp_units")
 
         # Puts either enterprise_units or optional_units shell into data set
-        #data_set[policy["units"]+"_units"] = {"units": {}}
-        data_set["enterprise_units"] = {"units": {}}
-        data_set["optional_units"] = {"units": {}}
+        u = policy["units"]+"_units"
+        data_set[u] = {"units": {}}
+        usable_units.append(u)
+        print "Usable units: " + str(usable_units)
 
         # Generates the crop name Array to be used in farm_crop query
         m_symb = policy["combined_market_symbol"]
@@ -331,7 +333,11 @@ class Generate():
                      "enterprise_units": ["total_acres", "APH", "yield_guarantee",
                                           "guarantee/acre", "total_bu_guarantee", "mcpi_bu_loss/acre", "mcpi_loss"]}
 
-        check_l = [(hpp_zones, "hpp_units"), (enterprise_zones, "enterprise_units"), (optional_zones, "optional_units")]
+        check_pre = [(hpp_zones, "hpp_units"),
+                     (enterprise_zones, "enterprise_units"),
+                     (optional_zones, "optional_units")]
+        check_l = [x for x in check_pre if x[1] in usable_units]
+
         for page in check_l:
             print page
             a = "SELECT (zones.section, zones.township, zones.range), array_to_string(array_agg(zones.id), ',') " \
