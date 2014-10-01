@@ -122,7 +122,6 @@ class Create():
             page.write_row(r+1, 2, unit["gen"].keys(), self.format_01)
             page.write_row(r+2, 2, unit["gen"].values())
 
-            # ! This will have to change, because dictionaries aren't ordered, which means .keys() won't be ! #
             # Sets our headers for the zone data
             # Sets the headers for our zone columns
             h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
@@ -169,11 +168,15 @@ class Create():
             page.write(r, 0, name, self.format_01)
 
             # General unit information
-            page.write_row(r+1, 1, unit["gen"].keys()[:4], self.format_01)
-            page.write_row(r+2, 1, unit["gen"].values()[:4])
+            h_order = ["Total Acres", "APH", "Yield Guarantee", "guarantee/acre",
+                       "Total Bushel Guarantee", "MPCI Bushel Loss per acre", "MPCI Loss"]
+            values = [unit["gen"][x] for x in h_order]
 
-            page.write_row(r+4, 1, unit["gen"].keys()[4:], self.format_01)
-            page.write_row(r+5, 1, unit["gen"].values()[4:])
+            page.write_row(r+1, 1, h_order[:4], self.format_01)
+            page.write_row(r+2, 1, values[:4])
+
+            page.write_row(r+4, 1, h_order[4:], self.format_01)
+            page.write_row(r+5, 1, values[4:])
 
             # Sets the headers for our zone columns
             h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
@@ -220,11 +223,15 @@ class Create():
             page.write(r, 0, name, self.format_01)
 
             # General unit information
-            page.write_row(r+1, 1, unit["gen"].keys()[:4], self.format_01)
-            page.write_row(r+2, 1, unit["gen"].values()[:4])
+            h_order = ["Total Acres", "Modified APH", "MPCI Yield Guarantee","Covered Bushels", "guarantee/acre",
+                       "Loss Percent", "Potential Bushel Loss", "Potential Dollar Loss", "Actual Dollar Loss"]
+            values = [unit["gen"][x] for x in h_order]
 
-            page.write_row(r+4, 1, unit["gen"].keys()[4:], self.format_01)
-            page.write_row(r+5, 1, unit["gen"].values()[4:])
+            page.write_row(r+1, 1, h_order[:4], self.format_01)
+            page.write_row(r+2, 1, values[:4])
+
+            page.write_row(r+4, 1, h_order[4:], self.format_01)
+            page.write_row(r+5, 1, values[4:])
 
             # Sets the headers for our zone columns
             h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
@@ -484,7 +491,7 @@ class Generate():
 
                     # Math Stuff #
                     # Actual Yield = Yield_goal - (yield_goal * loss_percent)
-                    actual_yield = result[3] - (result[3] * (result[5]/100))
+                    actual_yield = result[3] - (result[3] * (result[5] / 100.0))
 
                     # Actual Production = actual_yield * fsa_acres
                     actual_production = actual_yield * result[4]
@@ -499,7 +506,7 @@ class Generate():
                 # Generating general parts of the data set used by all units
                 gen_dict = units[name]["gen"]
                 gen_dict["Total Acres"] = total_acres
-                gen_dict["MPCI Yield Guarantee"] = result[6] * (policy["MPCI_coverage"] / 100)
+                gen_dict["MPCI Yield Guarantee"] = result[6] * (policy["MPCI_coverage"] / 100.0)
 
                 # Query to get the harvest prices and spring prices (in cents)
                 q = "SELECT farm_crops.harvest_price_cents, farm_crops.spring_price_cents " \
@@ -521,17 +528,19 @@ class Generate():
                     self.v_print("Generating enterprise and optional calculations..")
 
                     gen_dict["APH"] = result[6]
-                    gen_dict["guarantee/acre"] = spring_price * gen_dict["MPCI Yield Guarantee"]
+                    gen_dict["guarantee/acre"] = (spring_price/100.0) * gen_dict["MPCI Yield Guarantee"]
                     gen_dict["Total Bushel Guarantee"] = gen_dict["MPCI Yield Guarantee"] * total_acres
 
                     # Calculates trigger_yield, which is used in future calculations
                     if harvest_price < spring_price:
-                        a = gen_dict["guarantee/acre"] / harvest_price
+                        a = gen_dict["guarantee/acre"] / float(harvest_price / 100.0)
                     else:
                         a = gen_dict["MPCI Yield Guarantee"]
                     trigger_yield = a
 
-                    gen_dict["MPCI Bushel Loss per acre"] = trigger_yield - (actual_production_total / total_acres)
+                    a = trigger_yield - (actual_production_total / float(total_acres))
+
+                    gen_dict["MPCI Bushel Loss per acre"] = a
                     gen_dict["MPCI Loss"] = harvest_price * gen_dict["MPCI Bushel Loss per acre"] * total_acres
 
                     # Converting to currency - Doing it after everything because calculations require solid numbers
@@ -545,10 +554,10 @@ class Generate():
                 else:
                     self.v_print("Generating hpp calculations..")
 
-                    percent_spring_price = spring_price * (policy["percent_of_spring_price"] / 100)
+                    percent_spring_price = spring_price * (policy["percent_of_spring_price"] / 100.0)
 
-                    gen_dict["Modified APH"] = result[6] * (policy["hpp_coverage"] / 100)
-                    gen_dict["Covered Bushels"] = gen_dict["Modified APH"] - result[6] * (policy["MPCI_coverage"] / 100)
+                    gen_dict["Modified APH"] = result[6] * (policy["hpp_coverage"] / 100.0)
+                    gen_dict["Covered Bushels"] = gen_dict["Modified APH"] - result[6] * (policy["MPCI_coverage"] / 100.0)
                     gen_dict["guarantee/acre"] = percent_spring_price * gen_dict["Covered Bushels"]
                     gen_dict["Loss Percent"] = result[5]
 
@@ -565,7 +574,7 @@ class Generate():
                     gen_dict["Potential Dollar Loss"] = a
 
                     # Calculates actual_$_loss
-                    total_actual_yield = actual_production_total / total_acres
+                    total_actual_yield = actual_production_total / float(total_acres)
                     if total_actual_yield > gen_dict["Modified APH"] - gen_dict["Potential Bushel Loss"]:
                         if gen_dict["Modified APH"] - total_actual_yield < gen_dict["Potential Bushel Loss"]:
                             a = percent_spring_price * (gen_dict["Modified APH"] - total_actual_yield) * total_acres
@@ -603,9 +612,9 @@ class Generate():
         if type(number) not in (float, int):
             return number
 
-        is_neg = False
-        if number < 0:
-            is_neg = True
+        is_neg = (number < 0)
+
+        if is_neg:
             number *= -1
 
         a = "%0.2f" % number
@@ -615,11 +624,12 @@ class Generate():
         new_l = []
         div = (len(pre) / 3) + 1
         for x in range(div):
-            if len(pre) > 3:
+            if len(pre) >= 3:
                 new_l.append(pre[-3:])
                 pre = pre[:-3]
             else:
-                new_l.append(pre)
+                if pre != "":
+                    new_l.append(pre)
         new_l.reverse()
         pre = ",".join(new_l)
 
