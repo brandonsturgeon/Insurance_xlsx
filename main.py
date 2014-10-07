@@ -81,18 +81,15 @@ class Create():
         # Header
         page.merge_range("A1:B1", "Insurance Policy Info", self.format_01)
 
-        # Table
-        r = 1
-
         # This is the order we want the data to be displayed in, we remove values if they're not in data.keys()
+        # When this policy doesn't ahve HPP info, for example, the HPP Coverage and HPP Practice are removed
         h_order = ["County", "Units", "MPCI Coverage", "Practice", "HPP Coverage",
                    "HPP Practice", "Harvest Price", "Spring Price", "Percent of Spring Price"]
         h_order = [x for x in h_order if x in data.keys()]
 
         # Walks through h_order and gets the value or k from data to form a list, which is then written
-        for k in h_order:
-            page.write_row(r, 0, [k, data[k]])
-            r += 1
+        for r, k in enumerate(h_order):
+            page.write_row(r+1, 0, [k, data[k]])
 
     # Creates and formats the Enterprise Unit sheet
     def make_enterprise_units(self, data):
@@ -116,7 +113,10 @@ class Create():
 
         # Row counter
         r = 6
-        for name, unit in data["units"].iteritems():
+        units = sorted(data["units"].keys(), key=lambda a: int(a.split(" ")[2]))
+        for name in units:
+            unit = data["units"][name]
+
             page.write(r, 1, name, self.format_01)
             # The general information for this unit
             page.write_row(r+1, 2, unit["gen"].keys(), self.format_01)
@@ -130,6 +130,8 @@ class Create():
             r += 5
             # Creates the table by just writing each zone's ordered values as a list
             for zone in unit["zones"]:
+
+                # Builds a new list in the proper order
                 t_list = []
                 for h in h_order:
                     t_list.append(zone[h])
@@ -164,7 +166,10 @@ class Create():
 
         # Row counter
         r = 2
-        for name, unit in data["units"].iteritems():
+        units = sorted(data["units"].keys(), key=lambda a: int(a.split(" ")[2]))
+        for name in units:
+            unit = data["units"][name]
+
             page.write(r, 0, name, self.format_01)
 
             # General unit information
@@ -219,7 +224,10 @@ class Create():
 
         # Row counter
         r = 2
-        for name, unit in data["units"].iteritems():
+        units = sorted(data["units"].keys(), key=lambda a: int(a.split(" ")[2]))
+        for name in units:
+            unit = data["units"][name]
+
             page.write(r, 0, name, self.format_01)
 
             # General unit information
@@ -261,8 +269,9 @@ class Create():
 
 # Generates our data set to pass over to the Create class
 class Generate():
-    def __init__(self, verbose):
+    def __init__(self, verbose, very_verbose):
         self.verbose = verbose
+        self.very_verbose = very_verbose
         self.dictionary = {}
         self.main()
 
@@ -303,7 +312,7 @@ class Generate():
                      "Practice": ""}}
 
         # Creates object with policy info
-        policy_id = "20"
+        policy_id = "24"
         headers = ["id", "farm_id", "farm_crop_id", "units",
                    "combined_market_symbol", "hpp_coverage",
                    "county_id", "practice", "hpp_practice", "MPCI_coverage",
@@ -375,7 +384,7 @@ class Generate():
         farm_crops = [x[0] for x in cur.fetchall()]
 
         self.v_print("Creating SQL array of farm_crop ID's..")
-        # Creates an string representing an SQL array with all farm_crop_id's that we need to look for specific zones
+        # Creates a string representing an SQL array with all farm_crop_id's that we need to look for specific zones
         t_str = "ANY(ARRAY["
         t_str += str(farm_crops).strip("[]") + "])"
 
@@ -462,7 +471,7 @@ class Generate():
             # Looping through all results of the zones query
             for u in legals:
                 # Running totals used for "gen" information
-                total_acres = 0
+                total_acres = 0.0
                 actual_production_total = 0
 
                 # Turns the string of (Int, North/South, East/West) into a proper legal name
@@ -472,13 +481,13 @@ class Generate():
 
                 # Gets the general info for this section from unit_gens, and then sets them all to 0 in a dictionary
                 unit_gen = unit_gens[page[1]]
-                gens = dict(zip(unit_gen, [0 for x in range(len(unit_gen))]))
+                gens = dict(zip(unit_gen, [0]*len(unit_gen)))
                 units[name] = {"gen": gens, "zones": [int(x) for x in u[1].split(",")]}
 
                 new_l = []
                 for k, x in enumerate(units[name]["zones"]):
                     # Finds and returns zone information
-                    a = "SELECT fields.name, zones.name, zones.acres, " \
+                    a = "SELECT fields.name, zones.name, zones.fsa_acres, " \
                         "zones.yield_goal, zones.fsa_acres, zones.loss_percent, zones.aph, zones.id " \
                         "FROM fields, zones " \
                         "WHERE zones.id = " + str(x) + " " \
@@ -500,13 +509,20 @@ class Generate():
                                   "Acres": result[2],
                                   "Actual Production": actual_production,
                                   "Actual Yield": actual_yield})
-                    total_acres += int(result[2])
+                    total_acres += float(result[2])
                     actual_production_total += actual_production
 
                 # Generating general parts of the data set used by all units
                 gen_dict = units[name]["gen"]
-                gen_dict["Total Acres"] = total_acres
+                gen_dict["Total Acres"] = float(total_acres)
+                self.vv_print("Total Acres: " + str(gen_dict["Total Acres"]))
+                self.vv_print("")
+
                 gen_dict["MPCI Yield Guarantee"] = result[6] * (policy["MPCI_coverage"] / 100.0)
+                self.vv_print("MPCI Yield Guarantee: " + str(gen_dict["MPCI Yield Guarantee"]))
+                self.vv_print("^ = zones.aph * (mpci_coverage / 100.0)")
+                self.vv_print("^ = " + str(result[6]) + " * " + "(" + str(policy["MPCI_coverage"]) + " / " + "100.0")
+                self.vv_print("")
 
                 # Query to get the harvest prices and spring prices (in cents)
                 q = "SELECT farm_crops.harvest_price_cents, farm_crops.spring_price_cents " \
@@ -517,6 +533,11 @@ class Generate():
                 res = cur.fetchone()
                 harvest_price = res[0]
                 spring_price = res[1]
+                production_total = actual_production_total / float(total_acres)
+                self.vv_print("Production Total: " + str(production_total))
+                self.vv_print("^ = actual_production_toal / total_acres")
+                self.vv_print("^ = " + str(actual_production_total) + " / " + str(float(total_acres)))
+                self.vv_print("")
 
                 # While we're here, we go ahead and set some more policy attributes to show on the policy_info sheet
                 data_set["policy_info"]["Harvest Price"] = "$" + str(harvest_price / 100.0)
@@ -526,22 +547,65 @@ class Generate():
                 # If we're working with Optional or Enterprise
                 if page[1] != "hpp_units":
                     self.v_print("Generating enterprise and optional calculations..")
+                    self.v_print("--------------------------------------------------")
 
                     gen_dict["APH"] = result[6]
-                    gen_dict["guarantee/acre"] = (spring_price/100.0) * gen_dict["MPCI Yield Guarantee"]
+                    if gen_dict["MPCI Yield Guarantee"] > 0:
+                        gen_dict["guarantee/acre"] = (spring_price / 100.0) * gen_dict["MPCI Yield Guarantee"]
+                        _a = "^ = (spring_price / 100.0) * mpci_yield_guarantee"
+                        _b = "^ = (" + str(spring_price) + " / 100.0) * " + str(gen_dict["MPCI Yield Guarantee"])
+                    else:
+                        gen_dict["guarantee/acre"] = 0
+                        _a = "^ = 0"
+                        _b = "^ = 0"
+                    self.vv_print("guarantee/acre = " + str(gen_dict["guarantee/acre"]))
+                    self.vv_print(_a)
+                    self.vv_print(_b)
+                    self.vv_print("")
+
                     gen_dict["Total Bushel Guarantee"] = gen_dict["MPCI Yield Guarantee"] * total_acres
+                    self.vv_print("Total Bushel Guarantee: " + str(gen_dict["Total Bushel Guarantee"]))
+                    self.vv_print("^ = MPCI Yield Guarantee * Total Acres")
+                    self.vv_print("^ = " + str(gen_dict["MPCI Yield Guarantee"]) + " * " + str(total_acres))
+                    self.vv_print("")
 
                     # Calculates trigger_yield, which is used in future calculations
                     if harvest_price < spring_price:
-                        a = gen_dict["guarantee/acre"] / float(harvest_price / 100.0)
+                        b = float(gen_dict["guarantee/acre"] / float(harvest_price))
+                        _a = "^ = guarantee/acre / harvest_price"
+                        _b = "^ = " + str(gen_dict["guarantee/acre"]) + " / " + str(float(harvest_price))
                     else:
-                        a = gen_dict["MPCI Yield Guarantee"]
-                    trigger_yield = a
+                        b = gen_dict["MPCI Yield Guarantee"]
+                        _a = "^ = MPCI Yield Guarantee"
+                        _b = "^ = " + str(gen_dict["MPCI Yield Guarantee"])
+                    trigger_yield = b
+                    self.vv_print("Trigger Yield: " + str(trigger_yield))
+                    self.vv_print(_a)
+                    self.vv_print(_b)
+                    self.vv_print("")
 
-                    a = trigger_yield - (actual_production_total / float(total_acres))
+                    if trigger_yield > production_total:
+                        a = trigger_yield - production_total
+                        _a = "^ = trigger_yield - production_total"
+                        _b = "^ = " + str(trigger_yield) + " - " + str(production_total)
+                    else:
+                        a = 0
+                        _a = "^ = 0"
+                        _b = "^ = 0"
 
                     gen_dict["MPCI Bushel Loss per acre"] = a
-                    gen_dict["MPCI Loss"] = harvest_price * gen_dict["MPCI Bushel Loss per acre"] * total_acres
+                    self.vv_print("MPCI Bushel Loss per acre: " + str(gen_dict["MPCI Bushel Loss per acre"]))
+                    self.vv_print(_a)
+                    self.vv_print(_b)
+                    self.vv_print("")
+
+                    _a = (harvest_price / 100.0) * gen_dict["MPCI Bushel Loss per acre"] * total_acres
+                    gen_dict["MPCI Loss"] = _a
+                    self.vv_print("MPCI Loss: " + str(gen_dict["MPCI Loss"]))
+                    self.vv_print("^ = (harvest_price / 100.0) * MPCI Bushel Loss per acre * total_acres")
+                    self.vv_print("^ = (" + str(harvest_price / 100.0) + ") * "
+                                  + str(gen_dict["MPCI Bushel Loss per acre"]) + " * " + str(total_acres))
+                    self.vv_print("")
 
                     # Converting to currency - Doing it after everything because calculations require solid numbers
                     gen_dict["guarantee/acre"] = self.to_currency(gen_dict["guarantee/acre"])
@@ -553,36 +617,53 @@ class Generate():
                 # If we're working with HPP
                 else:
                     self.v_print("Generating hpp calculations..")
+                    self.v_print("-----------------------------------------")
 
-                    percent_spring_price = spring_price * (policy["percent_of_spring_price"] / 100.0)
+                    percent_spring_price = (spring_price / 100.0) * (policy["percent_of_spring_price"] / 100.0)
+                    self.v_print("% of sprint price: " + str(percent_spring_price))
+                    self.vv_print("^ = (spring_price / 100.0) * (percent_of_spring_price / 100.0")
+                    self.vv_print("^ = (" + str(spring_price / 100.0) +
+                                  str(policy["percent_of_spring_price"]) + " / 100.0")
+                    self.v_print("")
 
                     gen_dict["Modified APH"] = result[6] * (policy["hpp_coverage"] / 100.0)
-                    gen_dict["Covered Bushels"] = gen_dict["Modified APH"] - result[6] * (policy["MPCI_coverage"] / 100.0)
+                    self.v_print("Modified APH: " + str(gen_dict["Modified APH"]))
+                    self.vv_print("^ = zones.aph * (hpp_coverage / 100.0)")
+                    self.vv_print("^ = " + str(result[6]) + " * " + str(policy["hpp_coverage"]) + " / 100.0")
+                    self.v_print("")
+
+                    _a = gen_dict["Modified APH"] - result[6] * (policy["MPCI_coverage"] / 100.0)
+                    gen_dict["Covered Bushels"] = _a
+                    self.v_print("Covered Bushels: " + str(_a))
+                    self.vv_print("^ = Modified APH - zones.aph * (mpci_coverage / 100.0)")
+                    self.vv_print("^ = " + str(gen_dict["Modified APH"]) + " - " + str(result[6]))
+
                     gen_dict["guarantee/acre"] = percent_spring_price * gen_dict["Covered Bushels"]
                     gen_dict["Loss Percent"] = result[5]
 
                     # Calculates potential_bushel_loss
                     total_bushel_loss = gen_dict["Modified APH"] * gen_dict["Loss Percent"]
                     if gen_dict["Covered Bushels"] > total_bushel_loss:
-                        a = total_bushel_loss
+                        _a = total_bushel_loss
                     else:
-                        a = gen_dict["Covered Bushels"]
-                    gen_dict["Potential Bushel Loss"] = a
+                        _a = gen_dict["Covered Bushels"]
+                    gen_dict["Potential Bushel Loss"] = _a
 
-                    # Uses "a" as a temporary variable to save space and abide by PEP8 line-length standards
-                    a = percent_spring_price * gen_dict["Potential Bushel Loss"] * gen_dict["Total Acres"]
-                    gen_dict["Potential Dollar Loss"] = a
+                    # Uses "_a" as a temporary variable to save space and abide by PEP8 line-length standards
+                    _a = percent_spring_price * gen_dict["Potential Bushel Loss"] * gen_dict["Total Acres"]
+                    gen_dict["Potential Dollar Loss"] = _a
 
                     # Calculates actual_$_loss
-                    total_actual_yield = actual_production_total / float(total_acres)
-                    if total_actual_yield > gen_dict["Modified APH"] - gen_dict["Potential Bushel Loss"]:
-                        if gen_dict["Modified APH"] - total_actual_yield < gen_dict["Potential Bushel Loss"]:
-                            a = percent_spring_price * (gen_dict["Modified APH"] - total_actual_yield) * total_acres
+                    if production_total > gen_dict["Modified APH"]:
+                        _a = 0
+                    elif production_total > gen_dict["Modified APH"] - gen_dict["Potential Bushel Loss"]:
+                        if gen_dict["Modified APH"] - production_total < gen_dict["Potential Bushel Loss"]:
+                            _a = percent_spring_price * (gen_dict["Modified APH"] - production_total) * total_acres
                         else:
-                            a = percent_spring_price * gen_dict["Potential Bushel Loss"] * total_acres
+                            _a = percent_spring_price * gen_dict["Potential Bushel Loss"] * total_acres
                     else:
-                        a = gen_dict["Potential Dollar Loss"]
-                    gen_dict["Actual Dollar Loss"] = a
+                        _a = gen_dict["Potential Dollar Loss"]
+                    gen_dict["Actual Dollar Loss"] = _a
 
                     # Converting to currency - Doing it after everything because calculations require solid numbers
                     gen_dict["guarantee/acre"] = self.to_currency(gen_dict["guarantee/acre"])
@@ -604,6 +685,11 @@ class Generate():
     # Used for printing status messages if self.verbose is enabled
     def v_print(self, message):
         if self.verbose:
+            print message
+
+    # Used for printing more cumbersome status messages if self.very_verbose is enabled
+    def vv_print(self, message):
+        if self.very_verbose:
             print message
 
     # Takes a number and converts it to a string with currency formatting
@@ -651,6 +737,7 @@ class Generate():
 def main():
     doing_connections = True
     verbose = False
+    very_verbose = False
 
     # Sample data set
     dic = {"policy_info":
@@ -681,7 +768,7 @@ def main():
 
     # Generate a data set to use
     if doing_connections:
-        Create("test_file2", Generate(verbose).dictionary, verbose)
+        Create("test_file2", Generate(verbose, very_verbose).dictionary, verbose)
 
     # Use the pre-created data set
     else:
