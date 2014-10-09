@@ -102,6 +102,13 @@ class Create():
         page.merge_range("A1:G1", "Enterprise Units", self.format_01)
         page.merge_range("A3:B3", self.data["policy_info"]["County"], self.format_02)
 
+        # Sheet info
+        h = ["Total Acres", "Total Bushel Guarantee", "Total Actual Bushels", "MPCI Bu Loss", "MPCI Loss"]
+        page.write_row(2, 1, h)
+
+        # Sheet data
+        acre_totals = []
+
         # Setting Column Width
         page.set_column(2, 0, 15)
         page.set_column(3, 0, 15)
@@ -110,6 +117,10 @@ class Create():
         # General info
         page.write_row(3, 1, data["gen"].keys(), self.format_01)
         page.write_row(4, 1, data["gen"].values())
+
+        # Totals dictionary
+        h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
+        totals = dict(zip(h_order, [[] for _ in xrange(len(h_order))]))
 
         # Row counter
         r = 6
@@ -124,25 +135,34 @@ class Create():
 
             # Sets our headers for the zone data
             # Sets the headers for our zone columns
-            h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
             page.write_row(r+4, 1, h_order, self.format_01)
 
             r += 5
             # Creates the table by just writing each zone's ordered values as a list
             for zone in unit["zones"]:
+                for i, h in enumerate(h_order):
+                    if h in field_unlock:
+                        page.write(r, i+1, zone[h], self.unlocked)
+                    else:
+                        page.write(r, i+1, zone[h])
+                    cell = rc_to_ln(r, i+1)
+                    totals[h].append(cell)
 
-                # Builds a new list in the proper order
-                t_list = []
-                for h in h_order:
-                    t_list.append(zone[h])
-                page.write_row(r, 1, t_list)
-                r += 1
+            # Creates the SUM formulas for each unit
+            for h in h_order:
+                _sum = "=SUM("+",".join(totals[h])+")"
+                totals[h] = _sum
+            totals.pop("Field-Zone", None)
 
-            # Total calculations
-            page.write(r, 2, "Totals: ", self.format_03)
-            for c in range(4, 6):
-                _range = rc_to_ln_range(r-1, c, r-len(unit["zones"]), c)
-                page.write_formula(r, c, "=SUM("+_range+")", self.format_03)
+            # Totals writing
+            page.write(r, 1, "Totals: ", self.format_03)
+            for i, c in enumerate(range(4, 6)):
+                _formula = totals[h_order[i+1]]
+                page.write_formula(r, c, _formula, self.format_01)
+
+                # For the sheet totals
+                if i == 0:
+                    acre_totals.append(rc_to_ln(r, c))
             r += 3
 
     # Formats the Optional Units sheet
@@ -156,13 +176,20 @@ class Create():
         page.merge_range("A1:F1", "Optional Units", self.format_01)
 
         page.set_column(1, 0, 20)
-        page.set_column(2, 0, 20)
+        page.set_column(2, 0, 40)
         page.set_column(3, 0, 20)
         page.set_column(4, 0, 15)
         page.set_column(5, 0, 5)
         page.set_column(7, 0, 15)
         page.set_column(8, 0, 15)
         page.set_column(9, 0, 15)
+
+        # Headers for the general info
+        gen_h = ["Total Acres", "APH", "Yield Guarantee", "guarantee/acre",
+                 "Total Bushel Guarantee", "MPCI Bushel Loss per acre", "MPCI Loss"]
+
+        # Headers for the zones section
+        h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
 
         # Row counter
         r = 2
@@ -173,34 +200,50 @@ class Create():
             page.write(r, 0, name, self.format_01)
 
             # General unit information
-            h_order = ["Total Acres", "APH", "Yield Guarantee", "guarantee/acre",
-                       "Total Bushel Guarantee", "MPCI Bushel Loss per acre", "MPCI Loss"]
-            values = [unit["gen"][x] for x in h_order]
+            values = [unit["gen"][x] for x in gen_h]
 
-            page.write_row(r+1, 1, h_order[:4], self.format_01)
+            page.write_row(r+1, 1, gen_h[:4], self.format_01)
             page.write_row(r+2, 1, values[:4])
+            acres_row = r+2
 
-            page.write_row(r+4, 1, h_order[4:], self.format_01)
+            page.write_row(r+4, 1, gen_h[4:], self.format_01)
             page.write_row(r+5, 1, values[4:])
 
             # Sets the headers for our zone columns
-            h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
             page.write_row(r+8, 1, h_order, self.format_01)
 
+            # Which fields are unlocked
+            field_unlock = ["Acres"]
+
+            # Total dictionary
+            totals = dict(zip(h_order, [[] for _ in xrange(len(h_order))]))
+
             r += 9
-            # Creates the table by just writing each zone's ordered values as a list
+            # Writes each value for the zone, unlocks fields that are in field_unlock
             for zone in unit["zones"]:
-                t_list = []
-                for h in h_order:
-                    t_list.append(zone[h])
-                page.write_row(r, 1, t_list)
+                for i, h in enumerate(h_order):
+                    if h in field_unlock:
+                        page.write(r, i+1, zone[h], self.unlocked)
+                    else:
+                        page.write(r, i+1, zone[h])
+                    cell = rc_to_ln(r, i+1)
+                    totals[h].append(cell)
                 r += 1
 
-            # Total calculation
+            # Creates the SUM formulas for each unit
+            for h in h_order:
+                _sum = "=SUM("+",".join(totals[h])+")"
+                totals[h] = _sum
+            totals.pop("Field-Zone", None)
+
+            # Totals writing
             page.write(r, 1, "Totals: ", self.format_03)
-            for c in range(2, 5):
-                _range = rc_to_ln_range(r-1, c, r-len(unit["zones"]), c)
-                page.write_formula(r, c, "=SUM("+_range+")", self.format_03)
+            for i, c in enumerate(range(2, 5)):
+                _formula = totals[h_order[i+1]]
+                page.write_formula(r, c, _formula, self.format_03)
+
+            # Writes the total acres formula to the general info, too
+            page.write_formula(acres_row, 1, totals["Acres"], self.format_03)
             r += 3
 
     # Formats the HPP Units sheet
@@ -222,6 +265,13 @@ class Create():
         page.set_column(8, 0, 15)
         page.set_column(9, 0, 15)
 
+        # Headers for the general info
+        gen_h = ["Total Acres", "Modified APH", "MPCI Yield Guarantee","Covered Bushels", "guarantee/acre",
+                 "Loss Percent", "Potential Bushel Loss", "Potential Dollar Loss", "Actual Dollar Loss"]
+
+        # Headers for the zone section
+        h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
+
         # Row counter
         r = 2
         units = sorted(data["units"].keys(), key=lambda a: int(a.split(" ")[2]))
@@ -231,34 +281,51 @@ class Create():
             page.write(r, 0, name, self.format_01)
 
             # General unit information
-            h_order = ["Total Acres", "Modified APH", "MPCI Yield Guarantee","Covered Bushels", "guarantee/acre",
-                       "Loss Percent", "Potential Bushel Loss", "Potential Dollar Loss", "Actual Dollar Loss"]
-            values = [unit["gen"][x] for x in h_order]
 
-            page.write_row(r+1, 1, h_order[:4], self.format_01)
+            values = [unit["gen"][x] for x in gen_h]
+
+            page.write_row(r+1, 1, gen_h[:4], self.format_01)
             page.write_row(r+2, 1, values[:4])
+            acres_row = r+2
 
-            page.write_row(r+4, 1, h_order[4:], self.format_01)
+            page.write_row(r+4, 1, gen_h[4:], self.format_01)
             page.write_row(r+5, 1, values[4:])
 
             # Sets the headers for our zone columns
-            h_order = ["Field-Zone", "Acres", "Actual Production", "Actual Yield"]
+
             page.write_row(r+8, 1, h_order, self.format_01)
 
+            # Which fields are unlocked
+            field_unlock = ["Acres"]
+
+            # Total dictionary
+            totals = dict(zip(h_order, [[] for _ in xrange(len(h_order))]))
+
             r += 9
-            # Creates the table by just writing each zone's ordered values as a list
+            # Writes each value for the zone, unlocks fields that are in field_unlock
             for zone in unit["zones"]:
-                t_list = []
-                for h in h_order:
-                    t_list.append(zone[h])
-                page.write_row(r, 1, t_list)
+                for i, h in enumerate(h_order):
+                    if h in field_unlock:
+                        page.write(r, i+1, zone[h], self.unlocked)
+                    else:
+                        page.write(r, i+1, zone[h])
+                    cell = rc_to_ln(r, i+1)
+                    totals[h].append(cell)
                 r += 1
 
-            # Total calculations
+            # Creates the SUM formulas for each unit
+            for h in h_order:
+                _sum = "=SUM("+",".join(totals[h])+")"
+                totals[h] = _sum
+
+            # Totals writing
             page.write(r, 1, "Totals: ", self.format_03)
-            for c in range(2, 5):
-                _range = rc_to_ln_range(r-1, c, r-len(unit["zones"]), c)
-                page.write_formula(r, c, "=SUM("+_range+")", self.format_03)
+            for i, c in enumerate(range(2, 5)):
+                _formula = totals[h_order[i+1]]
+                page.write_formula(r, c, _formula, self.format_03)
+
+            # Writes the total acres formula to the general info, too
+            page.write_formula(acres_row, 1, totals["Acres"], self.format_03)
             r += 3
 
     # Used for printing status messages if self.verbose is enabled
